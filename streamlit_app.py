@@ -2298,7 +2298,7 @@ Users can review the detected issues before applying cleaning.
             from google import genai
 
             # API KEY
-            GEMINI_API_KEY = "AIzaSyCKSehBiqHjxe930LC7JCnF2faX29o2hz0"
+            GEMINI_API_KEY = st.secrets["GEMINI_API_KEY"]
 
             try:
                 # Read business context from session state
