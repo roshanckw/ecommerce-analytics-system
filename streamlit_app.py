@@ -883,7 +883,7 @@ Users can review the detected issues before applying cleaning.
         st.pyplot(fig)
         plt.close()
 
-        #  User picks method 
+        # User picks method
         st.subheader("Choose Outlier Flag Method")
 
         st.caption("""
@@ -919,52 +919,56 @@ Users can review the detected issues before applying cleaning.
             st.session_state["chosen_outlier_method"] = chosen_method
             st.session_state["chosen_outlier_count"] = chosen_count
 
+        # Only show results after user has applied a method
         if st.session_state.get("chosen_outlier_method"):
             chosen_method_display = st.session_state["chosen_outlier_method"]
             chosen_count_display = st.session_state["chosen_outlier_count"]
             st.success(f"✅ Outlier_Flag set using **{chosen_method_display}** — {chosen_count_display} outliers flagged.")
 
-        # Sample outliers 
-        st.subheader("Sample Flagged Outliers")
-        st.caption("ℹ️ These are the first few rows flagged as outliers by your chosen method.")
+            # Sample outliers
+            st.subheader("Sample Flagged Outliers")
+            st.caption("ℹ️ These are the first few rows flagged as outliers by your chosen method.")
 
-        if "ml_df_result" in st.session_state:
-            df_display = st.session_state["ml_df_result"]
-            outlier_sample = df_display[df_display['Outlier_Flag'] == -1].head()
-            if len(outlier_sample) > 0:
-                st.dataframe(outlier_sample)
-            else:
-                st.info("No outliers found with current method.")
-
-        # Optional Removal 
-        st.subheader("Optional Outlier Removal")
-
-        st.caption("""
-        ℹ️ Removing outliers is optional and should be done carefully.
-        Only remove if you believe the flagged rows are data errors , 
-        not legitimate transactions. In e-commerce, large orders may be 
-        valid bulk purchases from wholesale customers.
-        """)
-
-        remove_outliers = st.toggle(
-            "Remove flagged outliers from dataset before analysis",
-            value=False
-        )
-
-        if remove_outliers:
             if "ml_df_result" in st.session_state:
-                df_before = st.session_state["ml_df_result"].copy()
-                rows_before = df_before.shape[0]
-                df_cleaned = df_before[df_before['Outlier_Flag'] == 1].copy()
-                rows_after = df_cleaned.shape[0]
-                rows_removed = rows_before - rows_after
+                df_display = st.session_state["ml_df_result"]
+                outlier_sample = df_display[df_display['Outlier_Flag'] == -1].head()
+                if len(outlier_sample) > 0:
+                    st.dataframe(outlier_sample)
+                else:
+                    st.info("No outliers found with current method.")
 
-                st.session_state["ml_df_result"] = df_cleaned
-                st.warning(f"⚠️ {rows_removed} outlier rows removed. {rows_after} rows remaining.")
-                st.caption("ℹ️ You can uncheck the box above to restore outliers if needed — but you will need to re-run the detection.")
-        
+            # Optional Removal
+            st.subheader("Optional Outlier Removal")
+
+            st.caption("""
+            ℹ️ Removing outliers is optional and should be done carefully.
+            Only remove if you believe the flagged rows are data errors,
+            not legitimate transactions. In e-commerce, large orders may be
+            valid bulk purchases from wholesale customers.
+            """)
+
+            remove_outliers = st.toggle(
+                "Remove flagged outliers from dataset before analysis",
+                value=False
+            )
+
+            if remove_outliers:
+                if "ml_df_result" in st.session_state:
+                    df_before = st.session_state["ml_df_result"].copy()
+                    rows_before = df_before.shape[0]
+                    df_cleaned = df_before[df_before['Outlier_Flag'] == 1].copy()
+                    rows_after = df_cleaned.shape[0]
+                    rows_removed = rows_before - rows_after
+
+                    st.session_state["ml_df_result"] = df_cleaned
+                    st.warning(f"⚠️ {rows_removed} outlier rows removed. {rows_after} rows remaining.")
+                    st.caption("ℹ️ You can uncheck the box above to restore outliers if needed — but you will need to re-run the detection.")
+
+        else:
+            st.info("ℹ️ Select a method above and click Apply Chosen Method to see flagged outliers.")
+
         # Update main df from session state
-        if "ml_df_result" in st.session_state:
+        if "ml_df_result" in st.session_state and "df_after_cm" not in st.session_state:
             df = st.session_state["ml_df_result"]
 
     # Insight Generation
