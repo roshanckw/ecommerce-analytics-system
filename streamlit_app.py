@@ -1437,7 +1437,7 @@ Users can review the detected issues before applying cleaning.
         st.write(f"**Target (Y):** `{st.session_state['selected_target_col']}`")
         st.write(f"**Features (X):** {st.session_state['selected_feature_cols']}")
 
-        st.subheader("Dataset Preview — Selected Features")
+        st.subheader("Dataset Preview - Selected Features")
         st.dataframe(pd.DataFrame(st.session_state["fs_preview"]))
 
         if st.session_state["fs_missing"] > 0:
@@ -1591,7 +1591,7 @@ Users can review the detected issues before applying cleaning.
         y_test = st.session_state["y_test"]
 
         # Step 1 — Data overview
-        st.subheader("Step 1 — Data Overview")
+        st.subheader("Step 1 - Data Overview")
         st.write(f"**Features (X):** {len(feature_cols)} columns")
         st.write(f"**Target (Y):** `{target_col}`")
 
@@ -1624,16 +1624,16 @@ Users can review the detected issues before applying cleaning.
         for model_name, metrics in results.items():
             r2 = metrics["r2"]
             if r2 >= 0.8:
-                st.write(f"**{model_name}:** R² = {r2:.4f} — ✅ Strong model")
+                st.write(f"**{model_name}:** R² = {r2:.4f} - ✅ Strong model")
             elif r2 >= 0.5:
-                st.write(f"**{model_name}:** R² = {r2:.4f} — ⚠️ Moderate model")
+                st.write(f"**{model_name}:** R² = {r2:.4f} - ⚠️ Moderate model")
             else:
-                st.write(f"**{model_name}:** R² = {r2:.4f} — ❌ Weak model — consider selecting different features")
+                st.write(f"**{model_name}:** R² = {r2:.4f} - ❌ Weak model - consider selecting different features")
 
         # Step 6 — Best model
         st.subheader("Best Model")
         best_r2 = results[best_model_name]["r2"]
-        st.success(f"🏆 Best Model: **{best_model_name}** — R² = {best_r2:.4f}")
+        st.success(f"🏆 Best Model: **{best_model_name}** - R² = {best_r2:.4f}")
         st.write(f"This model explains **{best_r2*100:.1f}%** of the variation in `{target_col}`.")
 
         # Step 7 — Feature importance
@@ -1650,7 +1650,7 @@ Users can review the detected issues before applying cleaning.
             fig1, ax1 = plt.subplots(figsize=(8, 4))
             ax1.barh(importance_df["Feature"], importance_df["Importance"], color="steelblue")
             ax1.set_xlabel("Importance Score")
-            ax1.set_title(f"Feature Importance — {best_model_name}")
+            ax1.set_title(f"Feature Importance - {best_model_name}")
             ax1.invert_yaxis()
             st.pyplot(fig1)
             plt.close()
@@ -1677,7 +1677,7 @@ Users can review the detected issues before applying cleaning.
         )
         ax2.set_xlabel(f"Actual {target_col}")
         ax2.set_ylabel(f"Predicted {target_col}")
-        ax2.set_title(f"Actual vs Predicted — {best_model_name}")
+        ax2.set_title(f"Actual vs Predicted - {best_model_name}")
         ax2.legend()
         st.pyplot(fig2)
         plt.close()
