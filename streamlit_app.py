@@ -431,7 +431,7 @@ as they may reduce data reliability and affect analysis results.
                 annot_kws={"size": 9}
             )
 
-            ax_corr.set_title("Correlation Matrix — Numeric Columns", fontsize=12)
+            ax_corr.set_title("Correlation Matrix - Numeric Columns", fontsize=12)
             plt.tight_layout()
             st.pyplot(fig_corr)
             plt.close()
@@ -693,7 +693,7 @@ Users can review the detected issues before applying cleaning.
     st.info("""
     This phase detects unusual values in your dataset using three different methods.
     
-    • Outliers are flagged — not automatically removed.
+    • Outliers are flagged - not automatically removed.
             
     • You can compare all three methods and choose which one to trust.
             
@@ -744,7 +744,7 @@ Users can review the detected issues before applying cleaning.
         ⚠️ Weakness: harder to interpret why
         """)
 
-    if st.button("🚀 Run Outlier Detection"):
+    if st.button(" Run Outlier Detection"):
 
         from sklearn.ensemble import IsolationForest
         from scipy import stats
@@ -843,10 +843,10 @@ Users can review the detected issues before applying cleaning.
         **{least_method}** was the most conservative ({counts[least_method]} rows).
         
         • IQR is generally more reliable for e-commerce data because Revenue and Quantity 
-        are typically right-skewed — IQR handles skewed distributions better than Z-Score.
+        are typically right-skewed - IQR handles skewed distributions better than Z-Score.
         
         • Isolation Forest looks at all columns together and finds rows that are unusual 
-        across multiple dimensions — not just single columns.
+        across multiple dimensions - not just single columns.
         
         • If IQR and Z-Score agree on a row being an outlier, it is more likely a genuine anomaly.
         """)
@@ -1275,10 +1275,10 @@ Users can review the detected issues before applying cleaning.
             unique_count = df[col].nunique()
 
             if unique_count > 50:
-                recommendation = "⚠️ High cardinality — recommended: Drop"
+                recommendation = "⚠️ High cardinality - recommended: Drop"
                 default_choice = "Drop"
             else:
-                recommendation = "✅ Low cardinality — recommended: Encode"
+                recommendation = "✅ Low cardinality - recommended: Encode"
                 default_choice = "Encode (Label)"
 
             st.write(f"**{col}** — {unique_count} unique values — {recommendation}")
@@ -1450,7 +1450,7 @@ Users can review the detected issues before applying cleaning.
     
     # PREDICTION PHASE (AutoML)
    
-    st.header("AutoML — Prediction Phase")
+    st.header("AutoML - Prediction Phase")
 
     if "df_after_cm" in st.session_state:
         df = st.session_state.get("df_after_cm", df)
@@ -1468,7 +1468,7 @@ Users can review the detected issues before applying cleaning.
         st.warning("⚠️ Please complete the Feature Selection phase first.")
     else:
 
-        if st.button("🚀 Run Prediction Models"):
+        if st.button(" Run Prediction Models"):
 
             from sklearn.linear_model import LinearRegression
             from sklearn.ensemble import RandomForestRegressor
@@ -1599,24 +1599,24 @@ Users can review the detected issues before applying cleaning.
             st.write(f"ℹ️ {st.session_state['pred_missing_before']} missing values were filled using median values.")
 
         # Step 2 — Train/test split
-        st.subheader("Step 2 — Train / Test Split")
-        st.write(f"**Training set:** {st.session_state['pred_train_size']} rows (80%) — the model learns from this")
-        st.write(f"**Testing set:** {st.session_state['pred_test_size']} rows (20%) — the model is evaluated on this")
+        st.subheader("Step 2 - Train / Test Split")
+        st.write(f"**Training set:** {st.session_state['pred_train_size']} rows (80%) - the model learns from this")
+        st.write(f"**Testing set:** {st.session_state['pred_test_size']} rows (20%) - the model is evaluated on this")
         st.caption("ℹ️ We keep the test set completely separate during training so the evaluation is honest..the model never sees these rows until we measure its performance.")
 
         # Step 3 — Scaling note
-        st.subheader("Step 3 — Feature Scaling")
+        st.subheader("Step 3 - Feature Scaling")
         st.caption("ℹ️ Linear Regression is sensitive to column scales so scaling is applied for it. Random Forest and XGBoost handle different scales naturally so they use original data.")
 
         # Step 4 — Model comparison
-        st.subheader("Step 4 — Model Comparison")
+        st.subheader("Step 4 - Model Comparison")
         comparison_df = pd.DataFrame(st.session_state["pred_comparison"])
         st.dataframe(comparison_df, use_container_width=True)
         st.caption("""
         ℹ️ How to read these metrics:
-        - **R² Score** — how much of the pattern the model explains. Closer to 1.0 is better.
-        - **RMSE** — average prediction error in the same unit as your target. Lower is better.
-        - **MAE** — similar to RMSE but less sensitive to large errors. Lower is better.
+        - **R² Score** - how much of the pattern the model explains. Closer to 1.0 is better.
+        - **RMSE** - average prediction error in the same unit as your target. Lower is better.
+        - **MAE** - similar to RMSE but less sensitive to large errors. Lower is better.
         """)
 
         # Step 5 — R² interpretation
@@ -1690,7 +1690,7 @@ Users can review the detected issues before applying cleaning.
         st.caption("""
         ℹ️ A residual is the difference between the actual value and the predicted value.
         
-        Residual = Actual − Predicted
+        Residual = Actual - Predicted
         
         • Points scattered randomly around the zero line → model is performing well
                    
@@ -1759,9 +1759,9 @@ Users can review the detected issues before applying cleaning.
             st.caption("Largest single prediction error")
 
         if abs(mean_residual) < std_residual * 0.1:
-            st.success("✅ Mean residual is close to zero — the model is unbiased.")
+            st.success("✅ Mean residual is close to zero - the model is unbiased.")
         else:
-            st.warning("⚠️ Mean residual is not close to zero — the model may be systematically over or under predicting.")
+            st.warning("⚠️ Mean residual is not close to zero - the model may be systematically over or under predicting.")
 
         if len(set([1 if r > 0 else -1 for r in residuals])) == 2:
             pos = sum(1 for r in residuals if r > 0)
@@ -2024,7 +2024,7 @@ Users can review the detected issues before applying cleaning.
     else:
 
         # STEP 1: Column Selection 
-        st.subheader("Step 1 — Select Columns for Clustering")
+        st.subheader("Step 1 - Select Columns for Clustering")
         st.caption("ℹ️ Select at least 2 numeric columns. The algorithm will find natural groups based on these columns only.")
 
         cluster_cols = st.multiselect(
@@ -2037,7 +2037,7 @@ Users can review the detected issues before applying cleaning.
             st.warning("⚠️ Please select at least 2 columns for clustering.")
         else:
 
-            if st.button("🚀 Run Clustering"):
+            if st.button(" Run Clustering"):
                 st.session_state["clustering_run"] = True
                 st.session_state["cluster_cols_selected"] = cluster_cols
                 st.session_state.pop("elbow_inertia", None)
@@ -2067,7 +2067,7 @@ Users can review the detected issues before applying cleaning.
                     cluster_cols = valid_cols
 
                     # STEP 2: Prepare data
-                    st.subheader("Step 2 — Data Preparation")
+                    st.subheader("Step 2 - Data Preparation")
 
                     X_cluster = df_cluster[cluster_cols].copy()
 
@@ -2079,7 +2079,7 @@ Users can review the detected issues before applying cleaning.
                     st.write(f"**Rows:** {X_cluster.shape[0]} | **Columns used:** {cluster_cols}")
 
                     # STEP 3: Scaling 
-                    st.subheader("Step 3 — Scaling")
+                    st.subheader("Step 3 - Scaling")
 
                     scaler = StandardScaler()
                     X_scaled = scaler.fit_transform(X_cluster)
@@ -2095,13 +2095,13 @@ Users can review the detected issues before applying cleaning.
                     st.success("✅ All columns scaled to equal range.")
 
                     # STEP 4: Elbow Method 
-                    st.subheader("Step 4 — Finding the Best Number of Clusters (Elbow Method)")
+                    st.subheader("Step 4 - Finding the Best Number of Clusters (Elbow Method)")
 
                     st.caption("""
                     ℹ️ KMeans needs you to specify how many groups (K) to create.
                     The elbow method runs KMeans for K=2 to 10 and measures how 
                     tight the groups are (inertia). Where the curve bends like an 
-                    elbow — that is your best K. After that point, adding more 
+                    elbow - that is your best K. After that point, adding more 
                     groups gives very little improvement.
                     """)
 
@@ -2134,7 +2134,7 @@ Users can review the detected issues before applying cleaning.
                     st.write(f"💡 Suggested K based on elbow: **{suggested_k}**")
 
                     # STEP 5: User picks K 
-                    st.subheader("Step 5 — Choose Number of Clusters")
+                    st.subheader("Step 5 - Choose Number of Clusters")
 
                     chosen_k = st.slider(
                         "Select number of clusters (K)",
@@ -2156,7 +2156,7 @@ Users can review the detected issues before applying cleaning.
                         chosen_k = st.session_state["chosen_k_confirmed"]
 
                         # STEP 6: Run KMeans 
-                        st.subheader("Step 6 — Running KMeans")
+                        st.subheader("Step 6 - Running KMeans")
 
                         kmeans = KMeans(n_clusters=chosen_k, random_state=42, n_init=10)
                         cluster_labels = kmeans.fit_predict(X_scaled)
@@ -2165,24 +2165,24 @@ Users can review the detected issues before applying cleaning.
                         st.success(f"✅ KMeans completed. {chosen_k} clusters found.")
 
                         # STEP 7: Silhouette Score 
-                        st.subheader("Step 7 — Cluster Quality Check")
+                        st.subheader("Step 7 - Cluster Quality Check")
 
                         sil_score = silhouette_score(X_scaled, cluster_labels)
                         st.write(f"**Silhouette Score: {sil_score:.4f}**")
 
                         if sil_score >= 0.5:
-                            st.success("✅ Strong clusters — the groups are well separated.")
+                            st.success("✅ Strong clusters - the groups are well separated.")
                         elif sil_score >= 0.2:
-                            st.warning("⚠️ Reasonable clusters — some overlap exists between groups.")
+                            st.warning("⚠️ Reasonable clusters - some overlap exists between groups.")
                         else:
-                            st.error("❌ Weak clusters — groups overlap heavily. Try selecting different columns or a different K.")
+                            st.error("❌ Weak clusters - groups overlap heavily. Try selecting different columns or a different K.")
 
                         st.caption("""
                         ℹ️ Silhouette Score measures how well separated the clusters are.
                                    
                         Score above 0.5 → Strong and distinct groups ✅
                                    
-                        Score 0.2–0.5  → Reasonable groups ⚠️
+                        Score 0.2-0.5  → Reasonable groups ⚠️
                                    
                         Score below 0.2 → Groups are too similar ❌
                         """)
@@ -2211,11 +2211,11 @@ Users can review the detected issues before applying cleaning.
                         """)
 
                         # STEP 9: Cluster Profiles 
-                        st.subheader("Step 9 — Cluster Profiles")
+                        st.subheader("Step 9 - Cluster Profiles")
 
                         st.caption("""
                         ℹ️ This table shows the average values for each cluster.
-                        This is the most important output — it tells you what 
+                        This is the most important output - it tells you what 
                         makes each group different from the others.
                         """)
 
@@ -2237,14 +2237,14 @@ Users can review the detected issues before applying cleaning.
                             st.write(f"**Cluster {cluster_id}:** {label} — avg `{cluster_cols[0]}` = {cluster_mean:.2f}")
 
                         # STEP 10: Scatter Plot
-                        st.subheader("Step 10 — Cluster Visualisation")
+                        st.subheader("Step 10 - Cluster Visualisation")
 
                         st.caption("""
                         ℹ️ Each dot represents one row in your dataset.
                         Dots of the same colour belong to the same cluster.
                         Well separated colour groups mean the clustering worked well.
                         If using more than 2 columns, PCA reduces them to 2D for 
-                        visualisation only — the actual clustering was done on all 
+                        visualisation only - the actual clustering was done on all 
                         selected columns.
                         """)
 
@@ -2399,7 +2399,7 @@ Users can review the detected issues before applying cleaning.
                         for col in cols_used:
                             if col in cluster_profiles:
                                 val = cluster_profiles[col].get(cluster_id, "N/A")
-                                values.append(f"{col}={val}")
+                                values.append(f"{col} = {round(float(val), 2)}")
                         profile_line += ", ".join(values)
                         prompt_parts.append(profile_line)
                     prompt_parts.append("")
@@ -2440,6 +2440,7 @@ Users can review the detected issues before applying cleaning.
                 prompt_parts.append("Do NOT invent or assume prediction results if none were provided.")
                 prompt_parts.append("Do NOT invent or assume clustering results if none were provided.")
                 prompt_parts.append("Keep the entire report under 400 words. Be specific and practical.")
+                prompt_parts.append("Use clear spacing between all words and numbers. Do not repeat any phrases.")
 
                 full_prompt = "\n".join(prompt_parts)
 
@@ -2451,7 +2452,12 @@ Users can review the detected issues before applying cleaning.
                         model="gemini-2.5-flash-lite",
                         contents=full_prompt
                     )
+                    import re
                     report_text = response.text
+                    # Clean up any formatting artifacts
+                    report_text = re.sub(r'(\w)(\(average)', r'\1, \2', report_text)
+                    report_text = re.sub(r'([a-z])([A-Z])', r'\1 \2', report_text)
+                    report_text = ' '.join(report_text.split())
 
                 # DISPLAY REPORT
                 st.subheader("Generated Business Report")
