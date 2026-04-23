@@ -153,6 +153,11 @@ if uploaded_file is not None:
             "pred_interface_result", "pred_interface_low",
             "pred_interface_high", "pred_interface_inputs",
             "encoding_maps",
+            "clustering_run", "cluster_cols_selected", "elbow_inertia",
+            "chosen_k_confirmed",
+            "df_cleaned",
+            "needs_rerun",
+            "missing_handled_done","domain_rules_done"
             
 
         ]
@@ -165,6 +170,11 @@ if uploaded_file is not None:
     # Dataset Loading
     df = pd.read_csv(uploaded_file)
     raw_df = df.copy()
+
+    if "df_cleaned" in st.session_state:
+        df = st.session_state["df_cleaned"]
+    
+        
 
 
 
@@ -473,10 +483,13 @@ as they may reduce data reliability and affect analysis results.
             removed_duplicates = rows_before - rows_after
 
             st.success("Duplicate removal completed.")
+            
             st.write(f"Total Rows After Cleaning: {rows_after}")
             st.write(f"Duplicate Records Removed: {removed_duplicates}")
     else:
         st.success("No duplicate records found.")
+    
+    st.session_state["df_cleaned"] = df
 
     st.subheader("Missing value Handling")
 
@@ -518,31 +531,36 @@ Users can review the strategy before applying changes.
     st.write("Non-Critical Fields:", non_critical_fields)
 
     if st.toggle("Apply Missing Value Handling Rules"):
+        if not st.session_state.get("missing_handled_done"):
 
-        missing_before = df[critical_fields].isnull().sum().sum()
-        rows_before = df.shape[0]
+            missing_before = df[critical_fields].isnull().sum().sum()
+            rows_before = df.shape[0]
 
-        df = df.dropna(subset=critical_fields)
+            df = df.dropna(subset=critical_fields)
 
-        rows_after_drop = df.shape[0]
-        removed_rows = rows_before - rows_after_drop
+            rows_after_drop = df.shape[0]
+            removed_rows = rows_before - rows_after_drop
 
-        for col in non_critical_fields:
-            if df[col].dtype in ['int64','float64']:
-                df[col] = df[col].fillna(df[col].median())
-            else:
-                df[col] = df[col].fillna('Unknown')
+            for col in non_critical_fields:
+                if df[col].dtype in ['int64', 'float64']:
+                    df[col] = df[col].fillna(df[col].median())
+                else:
+                    df[col] = df[col].fillna('Unknown')
 
-        missing_after = df.isnull().sum().sum()
+            st.session_state["df_cleaned"] = df
+            st.session_state["missing_handled_done"] = True
 
-        st.success("Missing value handling completed.")
+            missing_after = df.isnull().sum().sum()
 
-        st.write("Rows removed due to critical missing values:", removed_rows)
-        st.write("Total Missing Before:", missing_before)
-        st.write("Total Missing After:", missing_after)
+            st.success("Missing value handling completed.")
+            st.write("Rows removed due to critical missing values:", removed_rows)
+            st.write("Total Missing Before:", missing_before)
+            st.write("Total Missing After:", missing_after)
 
-        st.subheader("Dataset Preview After Missing Handling")
-        st.dataframe(df.head())
+            st.subheader("Dataset Preview After Missing Handling")
+            st.dataframe(df.head())
+
+
 
     # Domain Column Mapping
     st.header("Domain Column Mapping")
@@ -600,29 +618,32 @@ Users can review the detected issues before applying cleaning.
     apply_domain_rules = st.toggle("Apply Domain Validation Rules")
 
     if apply_domain_rules:
+        if not st.session_state.get("domain_rules_done"):
 
-        rows_before = df.shape[0]
+            rows_before = df.shape[0]
 
-        if price_col != "None":
-            df = df[df[price_col] >= 0]
+            if price_col != "None":
+                df = df[df[price_col] >= 0]
 
-        if qty_col != "None":
-            df = df[df[qty_col] > 0]
+            if qty_col != "None":
+                df = df[df[qty_col] > 0]
 
-        rows_after = df.shape[0]
-        removed_rows = rows_before - rows_after
+            rows_after = df.shape[0]
+            removed_rows = rows_before - rows_after
 
-        categorical_columns = df.select_dtypes(include=['object']).columns.tolist()
+            categorical_columns = df.select_dtypes(include=['object']).columns.tolist()
 
-        for col in categorical_columns:
-            df[col] = df[col].str.strip().str.lower()
+            for col in categorical_columns:
+                df[col] = df[col].str.strip().str.lower()
 
-        st.success("Domain-specific cleaning applied successfully!")
+            st.session_state["df_cleaned"] = df
+            st.session_state["domain_rules_done"] = True
 
-        st.write(f"Rows removed due to domain violations: {removed_rows}")
+            st.success("Domain-specific cleaning applied successfully!")
+            st.write(f"Rows removed due to domain violations: {removed_rows}")
 
-        st.subheader("Dataset Preview After Domain Cleaning")
-        st.dataframe(df.head())
+            st.subheader("Dataset Preview After Domain Cleaning")
+            st.dataframe(df.head())
 
     # User Validation Summary
     st.header("Cleaning Summary of the Dataset")
@@ -656,9 +677,6 @@ Users can review the detected issues before applying cleaning.
     
     cleaned_filename = f"cleaned_{current_file}"
     
-    csv = df.to_csv(index=False).encode('utf-8')
-    
-    cleaned_filename = f"cleaned_{current_file}"
     
     st.download_button(
         label="Download Cleaned Dataset as CSV",
@@ -845,7 +863,7 @@ Users can review the detected issues before applying cleaning.
 
         ml_df = pd.DataFrame(st.session_state["outlier_ml_df"])
 
-        cols_to_plot = numerical_columns[:6]
+        cols_to_plot = pd.DataFrame(st.session_state["outlier_ml_df"]).columns.tolist()[:6]
         n_cols = min(3, len(cols_to_plot))
         n_rows = (len(cols_to_plot) + n_cols - 1) // n_cols
 
@@ -951,6 +969,9 @@ Users can review the detected issues before applying cleaning.
 
     # Insight Generation
     st.header("Insight Generation")
+
+    if "ml_df_result" in st.session_state and "df_after_cm" not in st.session_state:
+        df = st.session_state.get("df_after_cm", df)
 
     st.subheader("Insight Configuration")
 
@@ -1117,6 +1138,12 @@ Users can review the detected issues before applying cleaning.
     # COLUMN MANAGEMENT PHASE
     
     st.header("Column Management & Feature Engineering")
+    if "df_after_cm" in st.session_state:
+        df = st.session_state.get("df_after_cm", df)
+
+   
+
+   
 
     st.info("""
     This phase prepares your dataset for machine learning.
@@ -1159,19 +1186,20 @@ Users can review the detected issues before applying cleaning.
                 df[selected_date_col] = pd.to_datetime(df[selected_date_col])
 
                 if "Month" in extract_options:
-                    df["Month"] = df[selected_date_col].dt.month
+                    df["Month"] = df[selected_date_col].dt.month.astype("int64")
                 if "Day" in extract_options:
-                    df["Day"] = df[selected_date_col].dt.day
+                    df["Day"] = df[selected_date_col].dt.day.astype("int64")
                 if "DayOfWeek" in extract_options:
-                    df["DayOfWeek"] = df[selected_date_col].dt.dayofweek
+                    df["DayOfWeek"] = df[selected_date_col].dt.dayofweek.astype("int64")
                 if "Hour" in extract_options:
-                    df["Hour"] = df[selected_date_col].dt.hour
+                    df["Hour"] = df[selected_date_col].dt.hour.astype("int64")
                 if "IsWeekend" in extract_options:
-                    df["IsWeekend"] = df[selected_date_col].dt.dayofweek.isin([5, 6]).astype(int)
+                    df["IsWeekend"] = df[selected_date_col].dt.dayofweek.isin([5, 6]).astype("int64")
 
-                st.session_state["df_after_cm"] = df
+                st.session_state.get("df_after_cm", df)
                 st.session_state["date_extracted"] = True
                 st.session_state["date_extracted_cols"] = extract_options
+                st.rerun()
 
     else:
         st.info("No date columns detected in your dataset.")
@@ -1184,7 +1212,7 @@ Users can review the detected issues before applying cleaning.
     st.subheader("Revenue Feature Creation")
 
     if "df_after_cm" in st.session_state:
-        df = st.session_state["df_after_cm"]
+        df = st.session_state.get("df_after_cm", df)
 
     numeric_cols = df.select_dtypes(include=["int64", "float64"]).columns.tolist()
     col_options = ["None"] + numeric_cols
@@ -1212,11 +1240,12 @@ Users can review the detected issues before applying cleaning.
 
         if st.button("Create Revenue Column"):
             if "df_after_cm" in st.session_state:
-                df = st.session_state["df_after_cm"]
+                df = st.session_state.get("df_after_cm", df)
             df["Revenue"] = df[qty_col_fe] * df[price_col_fe]
             st.session_state["df_after_cm"] = df
             st.session_state["revenue_created"] = True
             st.session_state["revenue_stats"] = df["Revenue"].describe().to_dict()
+            st.rerun()
     else:
         st.info("Select both Quantity and Price columns to create Revenue.")
 
@@ -1231,7 +1260,7 @@ Users can review the detected issues before applying cleaning.
     st.write("For each categorical column, choose to **Encode** it or **Drop** it.")
 
     if "df_after_cm" in st.session_state:
-        df = st.session_state["df_after_cm"]
+        df = st.session_state.get("df_after_cm", df)
 
     categorical_cols = df.select_dtypes(include=["object"]).columns.tolist()
 
@@ -1262,7 +1291,7 @@ Users can review the detected issues before applying cleaning.
             from sklearn.preprocessing import LabelEncoder
 
             if "df_after_cm" in st.session_state:
-                df = st.session_state["df_after_cm"]
+                df = st.session_state.get("df_after_cm", df)
 
             dropped = []
             encoded = []
@@ -1283,11 +1312,12 @@ Users can review the detected issues before applying cleaning.
                     df[col] = le.transform(df[col].astype(str))
                     encoded.append(col)
 
-            st.session_state["df_after_cm"] = df
+            st.session_state["df_after_cm"] = df = df
             st.session_state["cat_handled"] = True
             st.session_state["cat_dropped"] = dropped
             st.session_state["cat_encoded"] = encoded
             st.session_state["encoding_maps"] = encoding_maps
+            st.rerun()
 
     else:
         st.info("No categorical columns remaining in the dataset.")
@@ -1319,7 +1349,7 @@ Users can review the detected issues before applying cleaning.
 
     # Always update df from session state at the end
     if "df_after_cm" in st.session_state:
-        df = st.session_state["df_after_cm"]
+        df = st.session_state.get("df_after_cm", df)
 
 
 
@@ -1328,6 +1358,12 @@ Users can review the detected issues before applying cleaning.
     # FEATURE SELECTION PHASE
   
     st.header("Feature Selection")
+
+    if "df_after_cm" in st.session_state:
+        df = st.session_state.get("df_after_cm", df)
+
+   
+
 
     st.info("""
     Select the columns your model will learn from (X features),
@@ -1340,10 +1376,10 @@ Users can review the detected issues before applying cleaning.
 
     # Always use latest df from Column Management if available
     if "df_after_cm" in st.session_state:
-        df = st.session_state["df_after_cm"]
+        df = st.session_state.get("df_after_cm", df)
 
     # Get numeric columns only
-    available_numeric_cols = df.select_dtypes(include=["int64", "float64"]).columns.tolist()
+    available_numeric_cols = df.select_dtypes(include=["int64", "int32", "float64", "float32"]).columns.tolist()
 
     if len(available_numeric_cols) < 2:
         st.warning("⚠️ Not enough numeric columns for feature selection. Please complete the Column Management phase first.")
@@ -1411,6 +1447,11 @@ Users can review the detected issues before applying cleaning.
     # PREDICTION PHASE (AutoML)
    
     st.header("AutoML — Prediction Phase")
+
+    if "df_after_cm" in st.session_state:
+        df = st.session_state.get("df_after_cm", df)
+
+    
 
     st.info("""
     This phase automatically trains 3 machine learning models on your prepared dataset,
@@ -1729,7 +1770,6 @@ Users can review the detected issues before applying cleaning.
 
             st.success("✅ Prediction phase complete. Scroll down to the Clustering phase.")
 
-        
         # PREDICTION INTERFACE
       
         st.subheader("Make a New Prediction")
@@ -1755,7 +1795,7 @@ Users can review the detected issues before applying cleaning.
             Adjust values to match the scenario you want to predict.
             """)
 
-            #  Dynamically generate input fields 
+            # Dynamically generate input fields
             input_values = {}
             cols_per_row = 3
             feature_list = feature_cols
@@ -1770,7 +1810,7 @@ Users can review the detected issues before applying cleaning.
                     min_val  = float(feature_mins.get(feat, 0))
                     max_val  = float(feature_maxs.get(feat, mean_val * 3 + 1))
 
-                    # Encoded categorical -- show dropdown 
+                    # Encoded categorical — show dropdown
                     if feat in encoding_maps:
                         options = list(encoding_maps[feat].keys())
                         selected = row_cols[j].selectbox(
@@ -1780,7 +1820,7 @@ Users can review the detected issues before applying cleaning.
                         )
                         input_values[feat] = encoding_maps[feat][selected]
 
-                    #  Month -- slider 1-12 
+                    # Month — slider 1-12
                     elif "month" in feat.lower():
                         input_values[feat] = row_cols[j].slider(
                             f"{feat}",
@@ -1790,7 +1830,7 @@ Users can review the detected issues before applying cleaning.
                             key=f"pred_input_{feat}"
                         )
 
-                    # DayOfWeek --  slider 0-6 
+                    # DayOfWeek — slider 0-6
                     elif "dayofweek" in feat.lower() or "day_of_week" in feat.lower():
                         input_values[feat] = row_cols[j].slider(
                             f"{feat} (0=Mon, 6=Sun)",
@@ -1800,7 +1840,7 @@ Users can review the detected issues before applying cleaning.
                             key=f"pred_input_{feat}"
                         )
 
-                    #  IsWeekend -- radio 0 or 1 
+                    # IsWeekend — radio 0 or 1
                     elif "weekend" in feat.lower() or "isweekend" in feat.lower():
                         input_values[feat] = row_cols[j].radio(
                             f"{feat}",
@@ -1810,7 +1850,7 @@ Users can review the detected issues before applying cleaning.
                             key=f"pred_input_{feat}"
                         )
 
-                    #  Hour -- slider 0-23
+                    # Hour — slider 0-23
                     elif "hour" in feat.lower():
                         input_values[feat] = row_cols[j].slider(
                             f"{feat}",
@@ -1820,8 +1860,8 @@ Users can review the detected issues before applying cleaning.
                             key=f"pred_input_{feat}"
                         )
 
-                    # Integer column --  whole number input 
-                    elif min_val == int(min_val) and max_val == int(max_val) and mean_val == int(mean_val):
+                    # Integer column — check dtype from dataframe
+                    elif str(st.session_state["df_for_ml"][feat].dtype) in ["int64", "int32"]:
                         input_values[feat] = row_cols[j].number_input(
                             f"{feat}",
                             min_value=int(min_val),
@@ -1831,7 +1871,7 @@ Users can review the detected issues before applying cleaning.
                             key=f"pred_input_{feat}"
                         )
 
-                    #  Default --  decimal number input 
+                    # Default — decimal number input
                     else:
                         step_val = float(max(0.01, round((max_val - min_val) / 100, 4)))
                         input_values[feat] = row_cols[j].number_input(
@@ -1843,7 +1883,7 @@ Users can review the detected issues before applying cleaning.
                             key=f"pred_input_{feat}"
                         )
 
-            # Predict button 
+            # Predict button
             if st.button("🔮 Predict"):
 
                 import numpy as np
@@ -1862,7 +1902,7 @@ Users can review the detected issues before applying cleaning.
                 # Make prediction
                 prediction = float(model.predict(input_array)[0])
 
-                # Confidence range for Random Forest 
+                # Confidence range for Random Forest
                 confidence_low  = None
                 confidence_high = None
 
@@ -1881,7 +1921,7 @@ Users can review the detected issues before applying cleaning.
                 st.session_state["pred_interface_high"]   = confidence_high
                 st.session_state["pred_interface_inputs"] = input_values.copy()
 
-            # Always show prediction result 
+            # Always show prediction result
             if st.session_state.get("pred_interface_result") is not None:
 
                 prediction  = st.session_state["pred_interface_result"]
@@ -1944,12 +1984,19 @@ Users can review the detected issues before applying cleaning.
 
                 st.caption("💡 Change the input values above and click Predict again to explore different scenarios.")
 
-
+        
+        
 
   
     # CLUSTERING PHASE
     
     st.header("Clustering Phase")
+
+    # Always use latest df
+    if "df_after_cm" in st.session_state:
+        df_cluster = st.session_state.get("df_after_cm", df).copy()
+    else:
+        df_cluster = df.copy()
 
     st.info("""
     Clustering groups your data into natural segments without needing a target column.
@@ -1963,11 +2010,7 @@ Users can review the detected issues before applying cleaning.
     like Month or DayOfWeek as clustering columns.
     """)
 
-    # Always use latest df
-    if "df_after_cm" in st.session_state:
-        df_cluster = st.session_state["df_after_cm"].copy()
-    else:
-        df_cluster = df.copy()
+    
 
     # Get numeric columns only
     numeric_cols_cluster = df_cluster.select_dtypes(include=["int64", "float64"]).columns.tolist()
@@ -2260,6 +2303,10 @@ Users can review the detected issues before applying cleaning.
     # LLM BUSINESS SUMMARY PHASE
     
     st.header("LLM Business Summary & Recommendations")
+
+    if "df_after_cm" in st.session_state:
+        df = st.session_state.get("df_after_cm", df)
+    
 
     st.info("""
     This phase uses Google Gemini AI to analyse your prediction and clustering results
